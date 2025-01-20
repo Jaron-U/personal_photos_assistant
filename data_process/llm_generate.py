@@ -1,10 +1,7 @@
 from openai import OpenAI
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import Config
-from utils import *
-from prompts import *
+from src.config import Config
+from data_process.utils import *
+from src.prompts import *
 from typing import Dict
 import json
 

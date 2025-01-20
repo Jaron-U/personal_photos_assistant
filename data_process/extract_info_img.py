@@ -1,11 +1,9 @@
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 import os
-from utils import *
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import Config
-from llm_generate import *
+from data_process.utils import *
+from src.config import Config
+from data_process.llm_generate import *
 from tqdm import tqdm
 import uuid
 
@@ -77,11 +75,8 @@ if __name__ == "__main__":
     config = Config()
     data_path = "dataset"
     output_path = "photos_info.json"
-    save_img_info_json(data_path, output_path, config)
-
-
-
-
+    # save_img_info_json(data_path, output_path, config)
+    print("Done!")
 
 
     # # image_path = "dataset/0B46E58A-99DD-4F49-95E7-3DC315A4A27E_1_105_c.jpeg"
@@ -96,6 +91,3 @@ if __name__ == "__main__":
     # parsed_data = parse_img_description(response)
     # print(parsed_data)
     
-
-
-

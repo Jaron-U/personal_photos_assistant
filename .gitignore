@@ -1,7 +1,8 @@
 __pycache__/
 */.pytest_cache/
-*/.vscode
 dataset/
 for_test/
 .env
 photos_info.json
+.vscode/
+*.egg-info
