@@ -4,3 +4,4 @@ __pycache__/
 dataset/
 for_test/
 .env
+photos_info.json
