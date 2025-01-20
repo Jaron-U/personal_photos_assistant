@@ -9,4 +9,4 @@ Database retrieval
 The large language model summarizes and answers based on the content of the retrieved pictures
 
 ## Flowchart
-![flowchart](images/flow_chart.jpg)
+![flowchart](images/flow_chart.png)
