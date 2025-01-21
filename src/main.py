@@ -4,6 +4,7 @@ from src.prompts import *
 from src.retrieve import get_search_result
 from FlagEmbedding import FlagModel
 import base64, json
+import re
 
 def llmodel_init(config: Config):
     query_anlysis_model = LLModel(
@@ -32,8 +33,8 @@ def llmodel_init(config: Config):
 
 def analyze_query(query: str, query_anlysis_model: LLModel, photo=None):
     query_anlysis_model.add_user_message(query, photo)
-    response = query_anlysis_model.get_response(print_response=False)
-    query_anlysis_model.add_assistant_message(response)
+    response = query_anlysis_model.get_response(print_response=False, has_photo=photo)
+    query_anlysis_model.remove_last_user_message()
     print(response)
     # query_anlysis_model.print_messages()
     
@@ -42,10 +43,10 @@ def analyze_query(query: str, query_anlysis_model: LLModel, photo=None):
         start_idx = response.find('{')
         end_idx = response.rfind('}') + 1
         json_str = response[start_idx:end_idx]
-        search_para = json.loads(json_str)
+        search_para = json.loads(json_str) 
+        return search_para
     except json.JSONDecodeError:
         return None
-    return search_para
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -60,8 +61,6 @@ def generate(query: str, generate_model: LLModel, retrieved_context: dict, photo
     generate_model.temp_add_user_message(combined_context)
     response = generate_model.get_response(print_response=True)
     generate_model.remove_last_user_message()
-    generate_model.add_user_message(query)
-    generate_model.add_assistant_message(response)
     return response
 
 def run_bash(query_anlysis_model, generate_model, embedding_model):
@@ -85,10 +84,11 @@ def run_bash(query_anlysis_model, generate_model, embedding_model):
         if not query_params:
             print("对不起，我无法理解您的查询。")
             continue
+        photo_descri = None
         if photo:
-            photo_descri = query_params['image_description']
-        search_params = query_params['search_params']
-        retrieved_context = get_search_result(search_params, embedding_model, config.top_k)
+            photo_descri = query_params['input_photo_description']
+        retrieved_context = get_search_result(query_params, embedding_model, config.top_k)
+        # print("\n获取的内容：", retrieved_context)
         _ = generate(user_input, generate_model, retrieved_context, photo_descri)
 
 if __name__ == "__main__":

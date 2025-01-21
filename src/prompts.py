@@ -44,75 +44,127 @@ def address_rewrite_pt():
    直接回复中文地址即可。
    """
 
-def multimodal_prompt():
-   prompt = """你是一个多模态查询解析助手。你的任务是：
-   1. 如果用户输入包含图片，首先理解图片的内容，并结合用户的问题提取相关信息
-   2. 将用户的自然语言查询（可能包含对图片的引用）解析为结构化的搜索参数
+def multimodal_prompt(photo=False):
+   text_prompt = """你是一个查询解析助手。你的任务是将用户的自然语言查询解析为结构化的搜索参数，方便进行用户相册的检索。
 
-   输入可能包含:
-   - 文本查询
-   - 图片输入 (如果有)
-
-   输出格式: JSON格式的查询参数，必须包含以下结构：
+   输入格式: 用户的自然语言查询
+   输出格式: JSON格式的查询参数，包含以下可能的字段：
    {
-      # 基础搜索参数
-      "search_params": {
-         "description": str,            # 描述文本
-         "tags": list[str],            # 相关标签
-         "time": {                     # 时间相关
-               "latest": bool,           # 是否查找最近的
-               "range": {                # 时间范围
-                  "gte": str,           # 开始时间
-                  "lte": str            # 结束时间
-               }
-         },
-         "location": str,              # 地点
-         "photo_type": str,            # 照片类型
-         "emotion": str,               # 情感类型
-         "size": int,                  # 返回结果数量
-         "tags_must": bool,            # 标签是否必须匹配
-         "location_must": bool         # 地点是否必须匹配
+      "description": str,            # 描述文本
+      "tags": list[str],            # 相关标签
+      "time": {                     # 时间相关
+         "latest": bool,           # 是否查找最近的
+         "range": {                # 时间范围
+               "gte": str,           # 开始时间
+               "lte": str            # 结束时间
+         }
       },
-      
-      # 图片描述（当输入包含图片时必须包含）
-      "image_description": str          # 图片的详细描述，如果没有图片则为null
+      "location": str,              # 地点
+      "size": int,                  # 返回结果数量
+      "location_must": bool         # 地点是否必须匹配
    }
 
-   解析规则:
-   1. 如果输入包含图片:
-      - 生成清晰、准确的图片描述
-      - 根据用户问题和图片内容生成搜索参数
-   2. 时间解析规则:
-      - "上次"、"最近"表示latest为true
-      - 具体时间表达要转换为标准格式
-   3. 从文本和图片描述中提取关键标签
+   注意:
+   1. 只返回与查询相关的字段
+   2. 时间解析要考虑：
+      - "上次"、"最近"等表示latest为true
+      - "去年"、"上个月"等需要转换为具体的时间范围
+   3. 情感词要映射到预设的情感类型
+   4. 标签要从描述中提取关键词
 
-   示例 1（仅文本查询）:
+   示例:
    输入: "上次去北京玩是什么时候"
    输出: {
-      "search_params": {
-         "description": "玩",
-         "location": "北京",
-         "time": {"latest": true},
-         "size": 1
-      },
-      "image_description": null
+      "description": "玩",
+      "location": "北京",
+      "time": {"latest": True},
+      "size": 1
    }
 
-   示例 2（包含图片的查询）:
-   输入: "我上次和他们一起吃火锅是什么时候"
-   输出: {
-      "search_params": {
-         "description": "火锅 聚餐",
-         "tags": ["火锅", "聚餐", "朋友聚会"],
-         "time": {"latest": true},
-         "size": 1,
-         "photo_type": "合照"
+   输入: "2023年春节和家人的合影"
+   输出:
+   {
+      "description": "春节家人合影",
+      "tags": ["春节", "家人", "合影"],
+      "time": {
+            "range": {
+               "gte": "2023-01-21",
+               "lte": "2023-01-27"
+            }
       },
-      "image_description": "一群人在餐厅围坐在火锅桌旁，大家正在享用火锅，气氛热闹"
+      "size": 20,
    }
    """
-   return prompt
+
+   photo_prompt = """你是一个多模态查询解析助手。你的任务是:
+   1. 首先理解输入图片的内容
+   2. 生成对图片的详细描述，包括主要内容、人物、环境等信息
+   2. 将用户的查询（包含对图片的引用）解析为结构化的搜索参数，方便进行用户相册的检索
+
+   分析步骤:
+   1. 图片分析:
+      - 主要内容：场景、主体、活动类型
+      - 人物：数量、互动、表情
+      - 环境：室内/室外、时间、天气
+      - 显著特征：颜色、构图、风格
+   
+   2. 查询解析:
+      - 结合图片内容和用户问题
+      - 提取搜索相关的关键信息
+      - 生成结构化参数
+
+   输入格式: 用户的自然语言查询
+   输出格式: JSON格式的查询参数，包含以下可能的字段：
+   {
+      "description": str,           # 描述文本
+      "tags": list[str],            # 相关标签
+      "time": {                     # 时间相关
+         "latest": bool,           # 是否查找最近的
+         "range": {                # 时间范围
+               "gte": str,           # 开始时间
+               "lte": str            # 结束时间
+         }
+      },
+      "location": str,              # 地点
+      "size": int,                  # 返回结果数量
+      "location_must": bool         # 地点是否必须匹配
+      "input_photo_description": str # 输入图片的详细描述
+   }
+
+   注意:
+   1. 只返回与查询相关的字段
+   2. 时间解析要考虑：
+      - "上次"、"最近"等表示latest为true
+      - "去年"、"上个月"等需要转换为具体的时间范围
+   3. 情感词要映射到预设的情感类型
+   4. 标签要从描述中提取关键词
+
+   示例:
+   输入: [图片：一群年轻人在餐厅吃火锅...] "找找看上次和他们一起吃火锅是什么时候"
+   输出:
+   {
+      "description": "火锅聚餐",
+      "tags": ["火锅", "聚餐", "朋友", "餐厅"],
+      "time": {
+            "latest": True,
+      },
+      "size": 100,
+      "input_photo_description": "一群年轻人在餐厅吃火锅..."
+   }
+
+   输入: [图片：海边夕阳照片...] "上次去这个海滩是什么时候？"
+   输出:
+   {
+      "description": "海滩夕阳",
+      "tags": ["海滩", "夕阳", "海边", "自然风光"],
+      "time": {
+         "latest": True,
+      },
+      "size": 100,
+      "input_photo_description": "海边夕阳照片..."
+   }
+   """
+   return photo_prompt if photo else text_prompt
 
 def generate_pt(curr_time="2025-1-20"):
    prompt = """你是一个智能照片问答助手。你的任务是基于照片信息来回答用户的问题。
@@ -133,3 +185,4 @@ def generate_pt(curr_time="2025-1-20"):
    7. 如果检索到的图片信息不注意回答问题，可以回答未检索到信息。
    8. 回答的时候完全不需要提到你的信息是来自外部检索。你可以完全把这些获取的信息当作你自己的知识。
    """
+   return prompt

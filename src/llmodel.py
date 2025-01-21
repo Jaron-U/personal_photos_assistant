@@ -16,7 +16,8 @@ class LLModel:
         self.model_name = model_name
         self.stream = stream
         self.max_tokens = max_tokens
-        self.sys_prompt = [{"role": "system", "content": sys_prompt()}]
+        self.sys_prompt_fun = sys_prompt
+        self.sys_prompt = []
         self.messages = []
 
         # dialog
@@ -30,7 +31,7 @@ class LLModel:
         else:
             user_massage = {
                 "role": "user", 
-                "messages": [{
+                "content": [{
                     "type": "image_url",
                     "image_url": {"url": f"data:image/png;base64,{photo}"}, 
                 },
@@ -47,7 +48,10 @@ class LLModel:
     
     def add_assistant_message(self, assistant_message:str):
         self.messages.append({"role": "assistant", "content": assistant_message})
-        self._maybe_summarize_and_trim()        
+        self._maybe_summarize_and_trim()   
+
+    def clean_dialog(self):
+        self.dialog_history = []     
     
     def _maybe_summarize_and_trim(self) -> None:
         """
@@ -70,7 +74,11 @@ class LLModel:
 
         return response
 
-    def get_response(self, print_response:bool = True) -> str:
+    def get_response(self, print_response:bool = True, has_photo=None) -> str:
+        if has_photo:
+            self.sys_prompt = [{"role": "system", "content": self.sys_prompt_fun(True)}]
+        else:
+            self.sys_prompt = [{"role": "system", "content": self.sys_prompt_fun(False)}]
         response = self._get_reponse()
         return self._process_response(response, print_response)
     

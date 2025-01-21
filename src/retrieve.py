@@ -133,7 +133,9 @@ if __name__ == "__main__":
         use_fp16=True
     )
     query_params = {
-        "description": "乐高",
+        "description": "滑雪",
+        "tags": ["滑雪"],
+        "size": 5
     }
     context = get_search_result(query_params, embed_model, top_k=10)
     print(context)

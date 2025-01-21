@@ -1,9 +1,26 @@
-# Personal Photos Assistant
+# 个人照片助手
+由于个人拍摄的照片越来越多，照片管理变得越来越困难。本项目旨在通过自然语言的方式查询照片，提高照片管理的效率。方便在进行回忆时，快速找到想要的照片。
+例如“我想看去年的生日照片”,“我上次吃火锅是什么时候”, "我去年在北京拍的照片"等等。
 
-The project uses a multimodal large model to answer questions about the user's personal photo album.
-Get the location, time and other information of the user's photos, and then use the multimodal large model to generate a detailed description for the picture.
-After the information is embedded, it is stored in the vector database.
+## 项目技术栈
+- 数据库采用了Elasticsearch
+- 多模态大模型采用了qwen2-vl
+- 语言模型采用了qwen2-7b
+- 采用bge对中文进行编码
 
-
-## Flowchart
+## 流程图
 ![flowchart](images/flow_chart.png)
+
+## 项目运行
+数据库构建和项目启动请参考我的[这个项目](https://github.com/Jaron-U/legal_AI_assistant/blob/main/README.md)，这两个项目构成基本一致。
+
+## 后续拓展
+### 性能优化
+- 优化搜索结果的排序
+- 优化prompt以获得更好的搜索结果
+- 提高检索内容的匹配度
+- 微调多模态模型，使其生成更好的检索参数。
+
+### 功能拓展
+- 可以构建知识图谱，让大模型认识相册中不同的人物。
+- 可以和其他应用结合，例如日记本，健康等等来获得一个更加人性化的助手。
