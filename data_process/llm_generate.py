@@ -1,6 +1,6 @@
 from openai import OpenAI
 from src.config import Config
-from data_process.utils import *
+from data_process.utils_dp import *
 from src.prompts import *
 from typing import Dict
 import json

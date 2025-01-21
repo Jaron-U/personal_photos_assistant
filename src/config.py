@@ -13,3 +13,5 @@ class Config:
     address_rewrite_model_name = "qwen/qwen-2-7b-instruct"
     # img_description_model_name = "qwen2-vl-7b-instruct"
     img_description_model_name = "qwen/qwen-2-vl-72b-instruct"
+
+    top_k = 10

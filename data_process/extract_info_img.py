@@ -1,7 +1,7 @@
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 import os
-from data_process.utils import *
+from data_process.utils_dp import *
 from src.config import Config
 from data_process.llm_generate import *
 from tqdm import tqdm

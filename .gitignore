@@ -6,3 +6,4 @@ for_test/
 photos_info.json
 .vscode/
 *.egg-info
+*.jpeg
