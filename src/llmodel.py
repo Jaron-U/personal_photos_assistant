@@ -4,19 +4,20 @@ import base64
 
 class LLModel:
     def __init__(self, base_url:str, api_key:str, 
-                 model_name:str, sys_prompt: Callable[..., str], 
+                 model_name:str, sys_prompt_func: Callable[..., str], 
                  max_round_dialog:int = 10, min_round_dialog:int = 1, 
-                 stream = False, max_tokens = 2000, **kwargs):
+                 stream = False, max_tokens = 2000, lable = "mllm",
+                 **kwargs):
         # instance of OpenAI
-        self.base_url = base_url
-        self.api_key = api_key
-        self.client = OpenAI(base_url=base_url, api_key=api_key)
+        self.client = OpenAI(
+            base_url=base_url, 
+            api_key=api_key)
 
         # api params
         self.model_name = model_name
         self.stream = stream
         self.max_tokens = max_tokens
-        self.sys_prompt_fun = sys_prompt
+        self.sys_prompt_func = sys_prompt_func
         self.sys_prompt = []
         self.messages = []
 
@@ -24,6 +25,11 @@ class LLModel:
         self.max_round_dialog = max_round_dialog
         self.min_round_dialog = min_round_dialog
         self.dialog_history = []
+
+        self.label = lable
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def temp_add_user_message(self, user_message:str, photo:base64 = None):
         if not photo:
@@ -50,9 +56,6 @@ class LLModel:
         self.messages.append({"role": "assistant", "content": assistant_message})
         self._maybe_summarize_and_trim()   
 
-    def clean_dialog(self):
-        self.dialog_history = []     
-    
     def _maybe_summarize_and_trim(self) -> None:
         """
         Summarize and trim the conversation buffer if necessary.
@@ -62,7 +65,7 @@ class LLModel:
         if current_rounds > self.max_round_dialog:
             self.dialog_history = self.dialog_history[-self.min_round_dialog * 2:]
     
-    def _get_reponse(self):
+    def _get_response(self):
         self.messages = self.sys_prompt + self.dialog_history
 
         response = self.client.chat.completions.create(
@@ -76,10 +79,10 @@ class LLModel:
 
     def get_response(self, print_response:bool = True, has_photo=None) -> str:
         if has_photo:
-            self.sys_prompt = [{"role": "system", "content": self.sys_prompt_fun(True)}]
+            self.sys_prompt = [{"role": "system", "content": self.sys_prompt_func(True)}]
         else:
-            self.sys_prompt = [{"role": "system", "content": self.sys_prompt_fun(False)}]
-        response = self._get_reponse()
+            self.sys_prompt = [{"role": "system", "content": self.sys_prompt_func(False)}]
+        response = self._get_response()
         return self._process_response(response, print_response)
     
     def _process_response(self, response, print_response:bool) -> str:        
@@ -105,7 +108,8 @@ class LLModel:
         return "".join(full_content)
     
     def print_messages(self):
-        print(f"-------------------------------")
+        self.messages = self.sys_prompt + self.dialog_history
+        print(f"---------------{self.label}----------------")
         for message in self.messages:
             print(f"\n{message['role']}: {message['content']}")
         print(f"-------------------------------")
